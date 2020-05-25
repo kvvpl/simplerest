@@ -53,3 +53,5 @@ accepted. All duplicated are ignored. Information if the upload was clean or wit
 is returned after upload is finished.
 5. A simple object-storage is used. The storage file is loaded from the app.storage.dir at the application
 startup and persisted during shutdown.
+6. The timestamp is considered to be long number, thus conversion from string to long is made and only
+records that fulfil this requirment are accepted.
