@@ -1,0 +1,3 @@
+PRIMARY_KEY,NAME,DES,UPDATED_TIMESTAMP
+ola,ma,kota,1
+ola,a,d,2

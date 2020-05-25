@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>File upload sample page</title>
+</head>
+
+<body>
+    <header>
+        <h1>Select the file to upload</h1>
+    </header>
+    <main>
+        <section>
+            <form method="POST" enctype="multipart/form-data" action="upload">
+                <input type="file" name="file">
+                <br />
+                <input type="submit" value="Send!">
+            </form>
+        </section>
+    </main>
+</body>
+
+</html>

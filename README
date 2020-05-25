@@ -1,0 +1,55 @@
+
+# Welcome to a simple REST server
+
+## Simple REST Server - Description
+
+Simple REST Server is a trivial web application that can be used to upload
+files containing predefined structure of records which later can be retrieve or deleted.
+The uploaded records are being persisted to a simple storage during application shutdown
+and retrieved (if available) during application startup.
+
+
+## How to build
+
+Simply run 'mvn package' and the jar that can be run will be inside target sub-directory.
+
+
+## How to run
+
+Run 'java -jar target/simple-rest-1.0-jar-with-dependencies.jar'
+
+or
+
+Run 'mvn exec:java'
+
+## Supported options
+-Dport=12345 - the port the server listens on, by default (if not set) it is 8080
+-Dapp.storage.dir=/some/directory - the directory where the uploaded records are going to be stored
+and retrieved from
+
+
+## How to use the application
+
+GET /echo - checks if the application is up and running
+GET /record/{primary_key} - retrieves the record for given primary key
+DELETE /record/{primary_key} - deletes the record for given primary key
+POST /upload - uploads a given comma-separated, 4-field-wide file. For successful upload 
+the encoding must be set 'multipart/form-data' and the file must be uploaded as the part of name 'file'
+One can have a look at /upload.html for the sample upload page.
+
+All response returns http status code (200, 400 or 500) together with json-like response that has 
+'message' field with detailed information.
+
+## Assumption made
+
+1. Internalization - is omitted for brevity.
+2. The application uses as much out-of-box JDK provided library as possible, thus e.g. Java serialization 
+instead of more sophisticated gRPS for record serialization.
+3. Upload performs strict validation which includes header, i.e., count and names of header fields, 
+record, i.e., number of fields, non-empty primary key, last line at the end of file 
+(there must me a new line that just contains \r (or \n)). Only completely correct files are accepted. 
+4. When uploading new files, the best effort is made, thus all non-conflicting (unique primary key) records are
+accepted. All duplicated are ignored. Information if the upload was clean or with duplicates 
+is returned after upload is finished.
+5. A simple object-storage is used. The storage file is loaded from the app.storage.dir at the application
+startup and persisted during shutdown.
