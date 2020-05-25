@@ -20,7 +20,7 @@ public class StorageTest {
 	}
 
 	File createNewStorageDictionary(String directory) throws IOException {
-		String newDirectory = directory + System.currentTimeMillis();
+		String newDirectory = directory + File.separatorChar+System.currentTimeMillis();
 		File file = new File(newDirectory);
 
 		if (file.mkdir()) {

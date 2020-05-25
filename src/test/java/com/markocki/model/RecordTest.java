@@ -4,11 +4,13 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.fail;
 
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.nio.file.Files;
 
 import org.junit.jupiter.api.Test;
 
@@ -69,7 +71,7 @@ class RecordTest {
 		long timestamp = System.currentTimeMillis();
 		
 	
-		try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(tmpdir + dbName));) {
+		try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(tmpdir + File.separatorChar + dbName));) {
 			Record record = RecordFactory.createRecord(primaryKey, name, description, timestamp);
 			oos.writeObject(record);
 		} catch (IOException|RecordCreateException exc) {
@@ -79,7 +81,7 @@ class RecordTest {
 	
 	
 	@Test
-	void storeAndRestorRecord() {
+	void storeAndRestorRecord() throws IOException {
 		String tmpdir = System.getProperty("java.io.tmpdir");
 		String dbName = "storage.db";
 		
@@ -88,15 +90,17 @@ class RecordTest {
 		String description  = "this is a description";
 		long timestamp = System.currentTimeMillis();
 		
-	
-		try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(tmpdir + dbName));) {
+		boolean dbSucessfullyCreated = false;
+		
+		try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(tmpdir + File.separatorChar + dbName));) {
 			Record record = RecordFactory.createRecord(primaryKey, name, description, timestamp);
 			oos.writeObject(record);
+			dbSucessfullyCreated = true;
 		} catch (IOException|RecordCreateException exc) {
 			fail(exc.getMessage());
 		}
 		
-		try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(tmpdir + dbName));) {
+		try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(tmpdir + File.separatorChar + dbName));) {
 			Object obj= ois.readObject();
 			assertEquals(true, obj instanceof Record);
 			Record record = (Record)obj;
@@ -108,7 +112,9 @@ class RecordTest {
 			fail(exc.getMessage());
 		}
 		
-		
+		if( dbSucessfullyCreated ) {
+			Files.delete(new File(tmpdir + File.separatorChar + dbName).toPath());
+		}
 	}	
 	
 }
