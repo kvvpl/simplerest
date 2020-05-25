@@ -1,0 +1,3 @@
+
+ola,ma,kota,11
+ola,a,d,2
