@@ -47,8 +47,9 @@ public class RecordsUploader {
 	
 	private static Record readInNextRecord(String line, long lineNumber) throws RecordsUploaderFileParseException {
 		// Per specification point 1 line must contains comma-separated values
-
-		String[] fields = line.split(",");
+		
+		// a trick to make sure empty non required columns will be accepted
+		String[] fields = line.replace(",",", ").split(",");
 
 		// Per specification point 1c line must contains four values
 		if (fields.length != 4) {
@@ -61,16 +62,21 @@ public class RecordsUploader {
 			throw new RecordsUploaderFileParseException("Line number " + lineNumber + " PRIMARY_KEY is empty but cannot.");
 		}
 
+		String key = fields[0].trim();
+		String name = fields[1].trim();
+		String desc = fields[2].trim();
+		String timestampStr = fields[3].trim();
+		
 		try {
 			// Assumption made as specificaiton does not make it clear!
 			// Timestamp is of long type (so convert received string to long
 			// as only PRIMARY_KEY must be non empty, timestamp can be
 			// in that case set it to empty long, i.e. 0
 			long timestamp = 0;
-			if (fields[3] != null) {
-				timestamp = Long.parseLong(fields[3]);
+			if ( ! "".equals(timestampStr) ) {
+				timestamp = Long.parseLong(timestampStr);
 			}
-			return RecordFactory.createRecord(fields[0], fields[1], fields[2], timestamp);
+			return RecordFactory.createRecord(key, name, desc, timestamp);
 		} catch (NumberFormatException exc) {
 			throw new RecordsUploaderFileParseException("Timestamp at line number " + lineNumber + " is of incorrect format.",
 					exc);

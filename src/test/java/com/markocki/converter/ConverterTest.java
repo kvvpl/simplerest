@@ -45,6 +45,37 @@ public class ConverterTest {
 	}
 
 	@Test
+	void testMinimalButCorrectFile() {
+
+		try (InputStream fileInputStream = ConverterTest.class.getResourceAsStream("minimalButCorrect.txt");
+				BufferedReader reader = new BufferedReader(new InputStreamReader(fileInputStream));) {
+
+			List<Record> result;
+			result = RecordsUploader.tryRetrieveRecords(reader);
+			assertEquals(2, result.size());
+
+			String prefix = "[Record first] ";
+			Record record = result.get(0);
+			assertEquals("ala", record.getPrimaryKey(), prefix + "Primary key is different");
+			assertEquals("", record.getName(), prefix + "Name is different");
+			assertEquals("", record.getDescription(), prefix + "Description is different");
+			assertEquals(0, record.getUpdatedTimestamp(), prefix + "Timestamp is different");
+
+			prefix = "[Record second] ";
+			record = result.get(1);
+			assertEquals("ola", record.getPrimaryKey(), prefix + "Primary key is different");
+			assertEquals("", record.getName(), prefix + "Name is different");
+			assertEquals("", record.getDescription(), prefix + "Description is different");
+			assertEquals(0, record.getUpdatedTimestamp(), prefix + "Timestamp is different");
+
+		} catch (IOException | RecordsUploaderFileParseException exc) {
+			fail(exc);
+		}
+	}
+	
+	
+	
+	@Test
 	void testTooShortHeader() {
 		try (InputStream fileInputStream = ConverterTest.class.getResourceAsStream("incorrectHeaderLength.txt");
 				BufferedReader reader = new BufferedReader(new InputStreamReader(fileInputStream));) {
@@ -118,5 +149,20 @@ public class ConverterTest {
 			fail(exc);
 		}
 	}	
+	
+	@Test
+	void testIncorrectRecordStructure() {
+		try (InputStream fileInputStream = ConverterTest.class.getResourceAsStream("incorrectSecondRecord.txt");
+				BufferedReader reader = new BufferedReader(new InputStreamReader(fileInputStream));) {
+
+			RecordsUploader.tryRetrieveRecords(reader);
+			fail("Should throw exception as second record does not have correct format.");
+
+		} catch (RecordsUploaderFileParseException exc) {
+			assertEquals("Line number 3 does not contains enough fields. Expected 4, received 3", exc.getMessage());
+		} catch(IOException exc) {
+			fail(exc);
+		}
+	}		
 	
 }
