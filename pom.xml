@@ -38,7 +38,7 @@
 					<archive>
 						<manifest>
 							<addClasspath>true</addClasspath>
-							<mainClass>com.markocki.web.HttpServer</mainClass>
+							<mainClass>com.markocki.web.HTTPServer</mainClass>
 						</manifest>
 					</archive>
 				</configuration>
@@ -83,7 +83,7 @@
 					<archive>
 						<manifest>
 							<addClasspath>true</addClasspath>
-							<mainClass>com.markocki.web.HttpServer</mainClass>
+							<mainClass>com.markocki.web.HTTPServer</mainClass>
 						</manifest>
 					</archive>
 				</configuration>
@@ -97,7 +97,7 @@
 					<arguments>
 						<argument>-classpath</argument>
 					</arguments>
-					<mainClass>com.markocki.web.HttpServer</mainClass>
+					<mainClass>com.markocki.web.HTTPServer</mainClass>
 				</configuration>
 			</plugin>
 		</plugins>
