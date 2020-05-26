@@ -10,7 +10,7 @@ public class RecordFactory {
 	public static Record createRecord(String primaryKey, String name, String description, long updatedTimestamp)
 			throws RecordCreateException {
 		if (Objects.isNull(primaryKey) || "".equals(primaryKey.trim())) {
-			throw new RecordCreateException("Primary key cannot be emoty or null");
+			throw new RecordCreateException("Primary key cannot be empty or null");
 		} else {
 			return new RecordImpl(primaryKey, name, description, updatedTimestamp);
 		}

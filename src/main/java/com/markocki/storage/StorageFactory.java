@@ -60,8 +60,8 @@ public class StorageFactory {
 	}
 
 	static class SimpleStorage implements Storage {
-		// let's have concurrency support, so both reads and writes (uploads) are possible
-		// and reads returns the current value of the record
+		// let's have concurrency support, so both reads and writes (uploads) are concurrently possible
+		// and reads return the current value of the record
 		
 		private Map<String, Record> theStorage = new ConcurrentHashMap<String, Record>();
 
@@ -93,7 +93,7 @@ public class StorageFactory {
 		public void save(Record recordToStore) throws RecordStoreException {
 			String primaryKey = recordToStore.getPrimaryKey();
 
-			// we do not accept duplicates, nor updates to the currectly existing records
+			// we do not accept duplicates, nor updates to the currently existing records
 			if (!theStorage.containsKey(primaryKey)) {
 				theStorage.put(primaryKey, recordToStore);
 			} else {

@@ -68,7 +68,7 @@ public class RecordsUploader {
 		String timestampStr = fields[3].trim();
 		
 		try {
-			// Assumption made as specificaiton does not make it clear!
+			// Assumption made as specification does not make it clear!
 			// Timestamp is of long type (so convert received string to long
 			// as only PRIMARY_KEY must be non empty, timestamp can be
 			// in that case set it to empty long, i.e. 0
