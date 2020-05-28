@@ -47,197 +47,201 @@ public class FrontControllerTest {
 		};
 	}
 
-	
-	
 	@Test
 	public void testEcho() throws Exception {
 		FrontController fc = new FrontController(createTestStorage(), "");
 		Route echoRoute = fc.echoRoute();
 		Request request = new Request() {
-		    public String body() {
-		        return "";
-		    }
-		};
-		
-		Response response = new Response() {
-		    String body = null;
-		    
-			public void status(int statusCode) {
-		    }
-		    
-		    public void body(String body) {
-		        this.body = body;
-		    }
-		    
-		    public String body() {
-		        return this.body;
-		    }		    
+			public String body() {
+				return "";
+			}
 		};
 
-		echoRoute.handle(request,response );
-		
+		Response response = new Response() {
+			String body = null;
+
+			public void status(int statusCode) {
+			}
+
+			public void body(String body) {
+				this.body = body;
+			}
+
+			public String body() {
+				return this.body;
+			}
+		};
+
+		echoRoute.handle(request, response);
+
 		assertEquals(true, response.body().contains("It works"));
 	}
-	
+
 	@Test
 	public void testSuccessfulDelete() throws Exception {
 		FrontController fc = new FrontController(createTestStorage(), "");
 		Route echoRoute = fc.delete();
 		Request request = new Request() {
-		    public String body() {
-		        return "";
-		    }
-		    
-		    public String params(String param) {
-	            return "key";
-		    }
+			public String body() {
+				return "";
+			}
+
+			public String params(String param) {
+				return "key";
+			}
 		};
-		
+
 		Response response = new Response() {
-		    String body = null;
-		    int status;
-		    
+			String body = null;
+			int status;
+
 			public void status(int statusCode) {
 				this.status = statusCode;
 			}
-		    public int status() {
-		        return this.status;
-		    }		    
-		    public void body(String body) {
-		        this.body = body;
-		    }
-		    
-		    public String body() {
-		        return this.body;
-		    }		    
+
+			public int status() {
+				return this.status;
+			}
+
+			public void body(String body) {
+				this.body = body;
+			}
+
+			public String body() {
+				return this.body;
+			}
 		};
 
-		echoRoute.handle(request,response );
-		
+		echoRoute.handle(request, response);
+
 		assertEquals(true, response.body().contains("Record deleted for PRIMARY_KEY"));
 		assertEquals(200, response.status());
 
-	}	
+	}
 
 	@Test
 	public void testUnSuccessfulDelete() throws Exception {
 		FrontController fc = new FrontController(createTestStorage(), "");
 		Route echoRoute = fc.delete();
 		Request request = new Request() {
-		    public String body() {
-		        return "";
-		    }
-		    
-		    public String params(String param) {
-	            return "keNotToBeFoundy";
-		    }
+			public String body() {
+				return "";
+			}
+
+			public String params(String param) {
+				return "keNotToBeFoundy";
+			}
 		};
-		
+
 		Response response = new Response() {
-		    String body = null;
-		    int status;
-		    
+			String body = null;
+			int status;
+
 			public void status(int statusCode) {
 				this.status = statusCode;
 			}
-		    public int status() {
-		        return this.status;
-		    }
-		    public void body(String body) {
-		        this.body = body;
-		    }
-		    
-		    public String body() {
-		        return this.body;
-		    }		    
+
+			public int status() {
+				return this.status;
+			}
+
+			public void body(String body) {
+				this.body = body;
+			}
+
+			public String body() {
+				return this.body;
+			}
 		};
 
-		echoRoute.handle(request,response );
-		
-		assertEquals(true, response.body().contains("keNotToBeFoundy"));
-		assertEquals(400, response.status());
+		try {
+			echoRoute.handle(request, response);
+		} catch (NoRecordFoundException exc) {
+			assertEquals("keNotToBeFoundy",exc.getMessage());
+		}		
+	}
 
-	}	
-	
-	
 	@Test
 	public void testSuccessfulGet() throws Exception {
 		FrontController fc = new FrontController(createTestStorage(), "");
 		Route echoRoute = fc.get();
 		Request request = new Request() {
-		    public String body() {
-		        return "";
-		    }
-		    
-		    public String params(String param) {
-	            return "key";
-		    }
+			public String body() {
+				return "";
+			}
+
+			public String params(String param) {
+				return "key";
+			}
 		};
-		
+
 		Response response = new Response() {
-		    String body = null;
-		    int status;
-		    
+			String body = null;
+			int status;
+
 			public void status(int statusCode) {
 				this.status = statusCode;
 			}
-		    public int status() {
-		        return this.status;
-		    }
-		    public void body(String body) {
-		        this.body = body;
-		    }
-		    
-		    public String body() {
-		        return this.body;
-		    }		    
+
+			public int status() {
+				return this.status;
+			}
+
+			public void body(String body) {
+				this.body = body;
+			}
+
+			public String body() {
+				return this.body;
+			}
 		};
 
-		echoRoute.handle(request,response );
-		
+		echoRoute.handle(request, response);
+
 		assertEquals(true, response.body().contains("key"));
 		assertEquals(200, response.status());
-	}		
-	
-	
+	}
+
 	@Test
 	public void testUnSuccessfulGet() throws Exception {
 		FrontController fc = new FrontController(createTestStorage(), "");
 		Route echoRoute = fc.get();
 		Request request = new Request() {
-		    public String body() {
-		        return "";
-		    }
-		    
-		    public String params(String param) {
-	            return "keNotToBeFoundy";
-		    }
+			public String body() {
+				return "";
+			}
+
+			public String params(String param) {
+				return "keNotToBeFoundy";
+			}
 		};
-		
+
 		Response response = new Response() {
-		    String body = null;
-		    int status;
-		    
+			String body = null;
+			int status;
+
 			public void status(int statusCode) {
 				this.status = statusCode;
 			}
-		    public int status() {
-		        return this.status;
-		    }
-		    public void body(String body) {
-		        this.body = body;
-		    }
-		    
-		    public String body() {
-		        return this.body;
-		    }		    
+
+			public int status() {
+				return this.status;
+			}
+
+			public void body(String body) {
+				this.body = body;
+			}
+
+			public String body() {
+				return this.body;
+			}
 		};
 
-		echoRoute.handle(request,response );
-		
-		assertEquals(true, response.body().contains("keNotToBeFoundy"));
-		assertEquals(400, response.status());
-	}		
-	
-	
+		try {
+			echoRoute.handle(request, response);
+		} catch (NoRecordFoundException exc) {
+			assertEquals("keNotToBeFoundy",exc.getMessage());
+		}
+	}
+
 }

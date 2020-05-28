@@ -6,7 +6,14 @@ import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.util.Objects;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+
 public class RecordFactory {
+	//as Gson is thread safe we can have one and reuse it for all Records.
+	static Gson gson = (new GsonBuilder()).setPrettyPrinting().create();
+	
+	
 	public static Record createRecord(String primaryKey, String name, String description, long updatedTimestamp)
 			throws RecordCreateException {
 		if (Objects.isNull(primaryKey) || "".equals(primaryKey.trim())) {
@@ -25,8 +32,7 @@ public class RecordFactory {
 
 		@Override
 		public String toString() {
-			return "{primaryKey:" + primaryKey + ", name:" + name + ", description:" + description
-					+ ", updatedTimestamp:" + updatedTimestamp + "}";
+			return RecordFactory.gson.toJson(this) ;
 		}
 
 		public RecordImpl(String primaryKey, String name, String description, long updatedTimestamp) {

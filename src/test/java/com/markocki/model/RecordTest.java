@@ -27,7 +27,7 @@ class RecordTest {
 			Record record = RecordFactory.createRecord("", "", "", 0);
 			fail("Record with empty primary key created");
 		} catch (RecordCreateException exc) {
-			assertEquals("Primary key cannot be emoty or null", exc.getMessage());
+			assertEquals("Primary key cannot be empty or null", exc.getMessage());
 		}
 	}
 
