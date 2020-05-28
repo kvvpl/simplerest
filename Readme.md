@@ -37,7 +37,7 @@ POST /upload - uploads a given comma-separated, 4-field-wide file. For successfu
 the encoding (Content-Type) must be set to 'multipart/form-data' and the file must be uploaded as the part of name 'file'
 One can have a look at /upload.html for the sample upload page.
 
-All response returns HTTP status code (200, 400 or 500) together with JSON-like response that has 
+All response returns HTTP status code (200, 400 or 500) together with JSON response which contains 
 'message' field with detailed information.
 
 ## Assumption made
