@@ -20,7 +20,7 @@ public class StorageTest {
 	}
 
 	File createNewStorageDictionary(String directory) throws IOException {
-		String newDirectory = directory + File.separatorChar+System.currentTimeMillis();
+		String newDirectory = directory + File.separatorChar + System.currentTimeMillis();
 		File file = new File(newDirectory);
 
 		if (file.mkdir()) {
@@ -93,23 +93,23 @@ public class StorageTest {
 		Storage storage = StorageFactory.loadStorage(dir.getPath());
 
 		try {
-		for (int counter = 1; counter <= 5; counter++) {
-			Record record = createRecord("key" + counter, "name" + counter, "description", System.currentTimeMillis());
-			storage.save(record);
-		}
+			for (int counter = 1; counter <= 5; counter++) {
+				Record record = createRecord("key" + counter, "name" + counter, "description",
+						System.currentTimeMillis());
+				storage.save(record);
+			}
 
-		StorageFactory.closeStorage(storage, dir.getPath());
-		
-		Storage storageReopened = StorageFactory.loadStorage(dir.getPath());
-		
-		for (int counter = 1; counter <= 5; counter++) {
-			storageReopened.findByPrimaryKey("key"+counter);
-		}
-		}
-		catch(RecordStoreException exc) {
-			fail("Exception occured while storing record",exc);
-		}catch(NoRecordFoundException exc) {
-			fail("Exception occured while retrieving record",exc);
+			StorageFactory.closeStorage(storage, dir.getPath());
+
+			Storage storageReopened = StorageFactory.loadStorage(dir.getPath());
+
+			for (int counter = 1; counter <= 5; counter++) {
+				storageReopened.findByPrimaryKey("key" + counter);
+			}
+		} catch (RecordStoreException exc) {
+			fail("Exception occured while storing record", exc);
+		} catch (NoRecordFoundException exc) {
+			fail("Exception occured while retrieving record", exc);
 		}
 		removeStorageDictionary(dir);
 	}

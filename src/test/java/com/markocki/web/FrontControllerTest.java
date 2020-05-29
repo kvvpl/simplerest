@@ -1,247 +1,218 @@
 package com.markocki.web;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
+import java.util.logging.Level;
+import java.util.logging.LogManager;
+
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.markocki.model.Record;
-import com.markocki.model.RecordCreateException;
-import com.markocki.model.RecordFactory;
 import com.markocki.storage.NoRecordFoundException;
-import com.markocki.storage.RecordStoreException;
 import com.markocki.storage.Storage;
 
 import spark.Request;
 import spark.Response;
-import spark.Route;
-import spark.utils.StringUtils;
 
 public class FrontControllerTest {
-	Storage createTestStorage() throws RecordCreateException {
-		Record recordToBeFound = RecordFactory.createRecord("key", "name", "description", System.currentTimeMillis());
-
-		return new Storage() {
-
-			@Override
-			public Record findByPrimaryKey(String primaryKey) throws NoRecordFoundException {
-				if (recordToBeFound.getPrimaryKey().equals(primaryKey)) {
-					return recordToBeFound;
-				} else {
-					throw new NoRecordFoundException(primaryKey);
-				}
-			}
-
-			@Override
-			public Record delete(Record recordToDelete) throws NoRecordFoundException {
-				if (recordToBeFound.getPrimaryKey().equals(recordToBeFound.getPrimaryKey())) {
-					return recordToBeFound;
-				} else {
-					throw new NoRecordFoundException(recordToBeFound.getPrimaryKey());
-				}
-			}
-
-			@Override
-			public void save(Record recordToStore) throws RecordStoreException {
-			}
-
-		};
-	}
-
 	@Test
 	public void testEcho() throws Exception {
-		FrontController fc = new FrontController(createTestStorage(), "");
-		Route echoRoute = fc.echoRoute();
-		Request request = new Request() {
-			public String body() {
-				return "";
-			}
-		};
+		final String MESSAGE = "It works";
+		
+		Request request = Mockito.mock(Request.class);
+		Mockito.when(request.body()).thenReturn("");
 
-		Response response = new Response() {
-			String body = null;
+		Response response = Mockito.mock(Response.class);
+		Mockito.when(response.body()).thenReturn(MESSAGE);
 
-			public void status(int statusCode) {
-			}
+		FrontController fc = Mockito.mock(FrontController.class);
+		Mockito.when(fc.echoRoute()).thenCallRealMethod();
 
-			public void body(String body) {
-				this.body = body;
-			}
+		fc.echoRoute().handle(request, response);
 
-			public String body() {
-				return this.body;
-			}
-		};
+		Mockito.verify(request, Mockito.times(1)).body();
+		Mockito.verifyNoMoreInteractions(request);
 
-		echoRoute.handle(request, response);
+		Mockito.verify(response, Mockito.times(1)).body();
+		Mockito.verify(response, Mockito.times(1)).body(Mockito.contains(MESSAGE));
+		Mockito.verify(response, Mockito.times(1)).status(Mockito.eq(200));
+		Mockito.verifyNoMoreInteractions(response);
 
-		assertEquals(true, response.body().contains("It works"));
+		assertEquals(true, response.body().contains(MESSAGE));
 	}
 
 	@Test
 	public void testSuccessfulDelete() throws Exception {
-		FrontController fc = new FrontController(createTestStorage(), "");
-		Route echoRoute = fc.delete();
-		Request request = new Request() {
-			public String body() {
-				return "";
-			}
+		final String PRIMARY_KEY = "key";
 
-			public String params(String param) {
-				return "key";
-			}
-		};
+		Request request = Mockito.mock(Request.class);
+		Mockito.when(request.params(Mockito.anyString())).thenReturn(PRIMARY_KEY);
 
-		Response response = new Response() {
-			String body = null;
-			int status;
+		Response response = Mockito.mock(Response.class);
 
-			public void status(int statusCode) {
-				this.status = statusCode;
-			}
+		Record record = Mockito.mock(Record.class);
 
-			public int status() {
-				return this.status;
-			}
+		Storage storage = Mockito.mock(Storage.class);
+		Mockito.when(storage.findByPrimaryKey(Mockito.contains(PRIMARY_KEY))).thenReturn(record);
+		Mockito.when(storage.delete(record)).thenReturn(record);
 
-			public void body(String body) {
-				this.body = body;
-			}
+		FrontController fc = Mockito.mock(FrontController.class);
+		Mockito.when(fc.getStorage()).thenReturn(storage);
 
-			public String body() {
-				return this.body;
-			}
-		};
+		Mockito.when(fc.delete()).thenCallRealMethod();
 
-		echoRoute.handle(request, response);
+		fc.delete().handle(request, response);
 
-		assertEquals(true, response.body().contains("Record deleted for PRIMARY_KEY"));
-		assertEquals(200, response.status());
+		Mockito.verify(request, Mockito.times(1)).params(Mockito.anyString());
+		Mockito.verifyNoMoreInteractions(request);
 
+		Mockito.verify(response, Mockito.times(1)).status(200);
+		Mockito.verify(response, Mockito.times(1)).body(Mockito.contains(PRIMARY_KEY));
+		Mockito.verifyNoMoreInteractions(request);
+
+		Mockito.verify(fc, Mockito.times(2)).getStorage();
+		Mockito.verify(fc, Mockito.times(1)).delete();
+
+		Mockito.verifyNoMoreInteractions(fc);
+
+		Mockito.verify(storage, Mockito.times(1)).findByPrimaryKey(Mockito.contains(PRIMARY_KEY));
+		Mockito.verify(storage, Mockito.times(1)).delete(record);
+		Mockito.verifyNoMoreInteractions(storage);
 	}
 
 	@Test
 	public void testUnSuccessfulDelete() throws Exception {
-		FrontController fc = new FrontController(createTestStorage(), "");
-		Route echoRoute = fc.delete();
-		Request request = new Request() {
-			public String body() {
-				return "";
-			}
+		final String PRIMARY_KEY = "keNotToBeFoundy";
 
-			public String params(String param) {
-				return "keNotToBeFoundy";
-			}
-		};
+		Request request = Mockito.mock(Request.class);
+		Mockito.when(request.params(Mockito.anyString())).thenReturn(PRIMARY_KEY);
 
-		Response response = new Response() {
-			String body = null;
-			int status;
+		Response response = Mockito.mock(Response.class);
 
-			public void status(int statusCode) {
-				this.status = statusCode;
-			}
+		Storage storage = Mockito.mock(Storage.class);
+		Mockito.when(storage.findByPrimaryKey(Mockito.contains(PRIMARY_KEY)))
+				.thenThrow(new NoRecordFoundException(PRIMARY_KEY));
 
-			public int status() {
-				return this.status;
-			}
+		FrontController fc = Mockito.mock(FrontController.class);
+		Mockito.when(fc.getStorage()).thenReturn(storage);
 
-			public void body(String body) {
-				this.body = body;
-			}
-
-			public String body() {
-				return this.body;
-			}
-		};
+		Mockito.when(fc.delete()).thenCallRealMethod();
 
 		try {
-			echoRoute.handle(request, response);
+			fc.delete().handle(request, response);
+			fail("Should fail as the record should NOT be found");
 		} catch (NoRecordFoundException exc) {
-			assertEquals("keNotToBeFoundy",exc.getMessage());
-		}		
+			assertTrue(exc.getMessage().contains(PRIMARY_KEY));
+		}
+
+		Mockito.verify(request, Mockito.times(1)).params(Mockito.anyString());
+		Mockito.verifyNoMoreInteractions(request);
+
+		Mockito.verify(response, Mockito.times(0)).status(Mockito.anyInt());
+		Mockito.verify(response, Mockito.times(0)).body(Mockito.anyString());
+		Mockito.verifyNoMoreInteractions(request);
+
+		Mockito.verify(fc, Mockito.times(1)).getStorage();
+		Mockito.verify(fc, Mockito.times(1)).delete();
+
+		Mockito.verifyNoMoreInteractions(fc);
+
+		Mockito.verify(storage, Mockito.times(1)).findByPrimaryKey(Mockito.contains(PRIMARY_KEY));
+		Mockito.verify(storage, Mockito.times(0)).delete(Mockito.any());
+
+		Mockito.verifyNoMoreInteractions(storage);
 	}
 
 	@Test
 	public void testSuccessfulGet() throws Exception {
-		FrontController fc = new FrontController(createTestStorage(), "");
-		Route echoRoute = fc.get();
-		Request request = new Request() {
-			public String body() {
-				return "";
-			}
+		final String PRIMARY_KEY = "key";
 
-			public String params(String param) {
-				return "key";
-			}
-		};
+		Request request = Mockito.mock(Request.class);
+		Mockito.when(request.params(Mockito.anyString())).thenReturn(PRIMARY_KEY);
 
-		Response response = new Response() {
-			String body = null;
-			int status;
+		Response response = Mockito.mock(Response.class);
 
-			public void status(int statusCode) {
-				this.status = statusCode;
-			}
+		Record record = Mockito.mock(Record.class);
+		Mockito.when(record.toString()).thenReturn(PRIMARY_KEY);
 
-			public int status() {
-				return this.status;
-			}
+		Storage storage = Mockito.mock(Storage.class);
+		Mockito.when(storage.findByPrimaryKey(Mockito.contains(PRIMARY_KEY))).thenReturn(record);
 
-			public void body(String body) {
-				this.body = body;
-			}
+		FrontController fc = Mockito.mock(FrontController.class);
+		Mockito.when(fc.getStorage()).thenReturn(storage);
 
-			public String body() {
-				return this.body;
-			}
-		};
+		Mockito.when(fc.get()).thenCallRealMethod();
 
-		echoRoute.handle(request, response);
+		fc.get().handle(request, response);
 
-		assertEquals(true, response.body().contains("key"));
-		assertEquals(200, response.status());
+		Mockito.verify(request, Mockito.times(1)).params(Mockito.anyString());
+		Mockito.verifyNoMoreInteractions(request);
+
+		Mockito.verify(response, Mockito.times(1)).status(200);
+		Mockito.verify(response, Mockito.times(1)).body(Mockito.contains(PRIMARY_KEY));
+		Mockito.verifyNoMoreInteractions(request);
+
+		Mockito.verify(fc, Mockito.times(1)).getStorage();
+		Mockito.verify(fc, Mockito.times(1)).get();
+
+		Mockito.verifyNoMoreInteractions(fc);
+
+		Mockito.verify(storage, Mockito.times(1)).findByPrimaryKey(Mockito.contains(PRIMARY_KEY));
+		Mockito.verifyNoMoreInteractions(storage);
 	}
 
 	@Test
 	public void testUnSuccessfulGet() throws Exception {
-		FrontController fc = new FrontController(createTestStorage(), "");
-		Route echoRoute = fc.get();
-		Request request = new Request() {
-			public String body() {
-				return "";
-			}
+		final String PRIMARY_KEY = "keNotToBeFoundy";
 
-			public String params(String param) {
-				return "keNotToBeFoundy";
-			}
-		};
+		Request request = Mockito.mock(Request.class);
+		Mockito.when(request.params(Mockito.anyString())).thenReturn(PRIMARY_KEY);
 
-		Response response = new Response() {
-			String body = null;
-			int status;
+		Response response = Mockito.mock(Response.class);
 
-			public void status(int statusCode) {
-				this.status = statusCode;
-			}
+		Storage storage = Mockito.mock(Storage.class);
+		Mockito.when(storage.findByPrimaryKey(Mockito.contains(PRIMARY_KEY)))
+				.thenThrow(new NoRecordFoundException(PRIMARY_KEY));
 
-			public int status() {
-				return this.status;
-			}
+		FrontController fc = Mockito.mock(FrontController.class);
+		Mockito.when(fc.getStorage()).thenReturn(storage);
 
-			public void body(String body) {
-				this.body = body;
-			}
-
-			public String body() {
-				return this.body;
-			}
-		};
+		Mockito.when(fc.get()).thenCallRealMethod();
 
 		try {
-			echoRoute.handle(request, response);
+			fc.get().handle(request, response);
+			fail("Should fail as the record should NOT be found");
 		} catch (NoRecordFoundException exc) {
-			assertEquals("keNotToBeFoundy",exc.getMessage());
+			assertTrue(exc.getMessage().contains(PRIMARY_KEY));
 		}
+
+		Mockito.verify(request, Mockito.times(1)).params(Mockito.anyString());
+		Mockito.verifyNoMoreInteractions(request);
+
+		Mockito.verify(response, Mockito.times(0)).status(Mockito.anyInt());
+		Mockito.verify(response, Mockito.times(0)).body(Mockito.anyString());
+		Mockito.verifyNoMoreInteractions(request);
+
+		Mockito.verify(fc, Mockito.times(1)).getStorage();
+		Mockito.verify(fc, Mockito.times(1)).get();
+
+		Mockito.verifyNoMoreInteractions(fc);
+
+		Mockito.verify(storage, Mockito.times(1)).findByPrimaryKey(Mockito.contains(PRIMARY_KEY));
+		Mockito.verifyNoMoreInteractions(storage);
 	}
 
+	@BeforeAll
+	public static void setUp() {
+		// as there is no way to change log level in runtime for sl4j
+		Logger logger = LoggerFactory.getLogger(FrontController.class);
+		// let's use this way
+		LogManager.getLogManager().getLogger(FrontController.class.getName()).setLevel(Level.OFF);
+	}
 }

@@ -16,7 +16,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.markocki.converter.RecordsUploader;
-import com.markocki.converter.RecordsUploaderFileParseException;
 import com.markocki.converter.RecordsUploaderInternalException;
 import com.markocki.model.Record;
 import com.markocki.storage.NoRecordFoundException;
