@@ -17,12 +17,12 @@ import org.junit.jupiter.api.Test;
 class RecordTest {
 
 	@Test
-	void getFactory() {
+	void checkRecordFactoryAvability() {
 		assertNotNull(RecordFactory.class, "There is no RecordFactory class found");
 	}
 
 	@Test
-	void createEmptyRecord() {
+	void testIfItIsNotPossibleToCreateEmptyRecord() {
 		try {
 			Record record = RecordFactory.createRecord("", "", "", 0);
 			fail("Record with empty primary key created");
@@ -32,7 +32,7 @@ class RecordTest {
 	}
 
 	@Test
-	void createMinimalRecord() {
+	void createRecordWithMinimalContent() {
 		try {
 			String primaryKey = "a sample primary key";
 			Record record = RecordFactory.createRecord(primaryKey, "", "", 0);
@@ -43,7 +43,7 @@ class RecordTest {
 	}
 
 	@Test
-	void createRecord() {
+	void createRecordWithFullContent() {
 		try {
 			String primaryKey = "a sample primary key";
 			String name = "this is a name";
@@ -61,7 +61,7 @@ class RecordTest {
 	}
 
 	@Test
-	void storeRecord() {
+	void testRecordSerialization() {
 		String tmpdir = System.getProperty("java.io.tmpdir");
 		String dbName = "storage.db";
 		
@@ -81,7 +81,7 @@ class RecordTest {
 	
 	
 	@Test
-	void storeAndRestorRecord() throws IOException {
+	void testRecordSerializationAndDeserialization() throws IOException {
 		String tmpdir = System.getProperty("java.io.tmpdir");
 		String dbName = "storage.db";
 		

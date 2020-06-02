@@ -4,6 +4,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.Reader;
 import java.util.Iterator;
 import java.util.List;
 
@@ -16,6 +17,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.markocki.converter.RecordsUploader;
+import com.markocki.converter.RecordsUploaderFileParseException;
 import com.markocki.converter.RecordsUploaderInternalException;
 import com.markocki.model.Record;
 import com.markocki.storage.NoRecordFoundException;
@@ -61,19 +63,19 @@ public class FrontController {
 			try {
 				record = getStorage().findByPrimaryKey(key);
 			} catch (NoRecordFoundException exc) {
-				logger.warn("[DELETE] Failure while looking for the record of primiary key="+key,exc);
+				logger.warn("[DELETE] Failure while looking for the record of primiary key=" + key, exc);
 				throw exc;
 			}
-			
+
 			try {
 				getStorage().delete(record);
 			} catch (NoRecordFoundException exc) {
-				logger.warn("[DELETE] Failure while removing the found record of primiary key="+key,exc);
+				logger.warn("[DELETE] Failure while removing the found record of primiary key=" + key, exc);
 				throw exc;
 			}
-			
+
 			String responseStr = "Record deleted for PRIMARY_KEY=" + key;
-			logger.debug("[DELETE] "+responseStr);
+			logger.debug("[DELETE] " + responseStr);
 			ResponseBuilder.createtResponseOK(response, responseStr);
 
 			return response.body();
@@ -85,7 +87,7 @@ public class FrontController {
 			logger.trace("[GET] Method called ...");
 
 			Record record;
-			
+
 			String key = request.params(PRIMARY_KEY_REQUEST_PARAMETER_NAME);
 
 			logger.debug("[GET] Looking for record of primary key:" + key);
@@ -93,22 +95,25 @@ public class FrontController {
 			try {
 				record = getStorage().findByPrimaryKey(key);
 			} catch (NoRecordFoundException exc) {
-				logger.warn("[GET] Failure while looking for the record of primiary key="+key,exc);
+				logger.warn("[GET] Failure while looking for the record of primiary key=" + key, exc);
 				throw exc;
 			}
 
-			logger.debug("[GET] Found record for primary key:"+key+". Record content: "+record);
+			logger.debug("[GET] Found record for primary key:" + key + ". Record content: " + record);
 			ResponseBuilder.createtResponseOK(response, record);
 
 			return response.body();
 		};
 	}
 
+	List<Record> getAllRecords(BufferedReader reader) throws IOException, RecordsUploaderFileParseException{
+		return RecordsUploader.tryRetrieveRecords(reader);
+	}
+	
 	public Route upload() {
 		return (request, response) -> {
 			logger.trace("[UPLOAD] Method called ...");
 
-			
 			logger.trace("[UPLOAD] enable jetty multipart support");
 			request.raw().setAttribute(Request.__MULTIPART_CONFIG_ELEMENT, multipartConfigElement);
 
@@ -126,33 +131,32 @@ public class FrontController {
 							BufferedReader reader = new BufferedReader(new InputStreamReader(fileInputStream));) {
 						logger.trace("[UPLOAD] reading file content");
 
-						List<Record> result = RecordsUploader.tryRetrieveRecords(reader);
+						// get all records within the file (even duplicates)
+						List<Record> result = getAllRecords(reader);
 
-						logger.info("[UPLOAD] Number of records read="+result.size());
-						
+						logger.info("[UPLOAD] Number of records read=" + result.size());
+
 						logger.trace("[UPLOAD] saving the records to the storage");
-						boolean duplicatesFound = false;
+						
+						long successfullyStored = 0;
 						for (Iterator<Record> iterator = result.iterator(); iterator.hasNext();) {
 							Record record = (Record) iterator.next();
 
 							try {
 								getStorage().save(record);
+								successfullyStored ++;
 							} catch (RecordStoreException exc) {
-								duplicatesFound = true;
+								// duplicate found, ignore the record to be store, preserve the old one
+								logger.warn("[UPLOAD] Cannot store given record: " + record + " befause of: "+exc.getMessage());
 							}
 						}
 
-						logger.trace("[UPLOAD] saving the records to the storage - completed");
-						
-						if (duplicatesFound) {
-							logger.info("[UPLOAD] Uploaded, duplicates eliminated");
-							ResponseBuilder.createtResponseError(response, "Uploaded, duplicates eliminated");
-						} else {
-							logger.info("[UPLOAD] Uploaded successfully and clearly");
-							ResponseBuilder.createtResponseOK(response, "Uploaded successfully and clearly");
-						}
+						logger.trace("[UPLOAD] saving the records to the storage - completed. Number of stored records="+successfullyStored );
+
+						logger.info("[UPLOAD] Uploaded successfully. Number of stored records="+successfullyStored);
+						ResponseBuilder.createtResponseOK(response, "Uploaded successfully");
 					} catch (IOException exc) {
-						logger.error("[UPLOAD] Internal error while uploading the file.",exc);
+						logger.error("[UPLOAD] Internal error while uploading the file.", exc);
 						throw new RecordsUploaderInternalException(
 								"Internal error while uploading the file =" + exc.getMessage());
 					}
@@ -160,12 +164,11 @@ public class FrontController {
 					logger.error("[UPLOAD] No file to upload found under 'file' part");
 					throw new RecordsUploaderInternalException("No file to upload found under 'file' part");
 				}
-
 			} catch (IOException exc) {
-				logger.error("[UPLOAD] There was no 'file' part inside the request",exc);
+				logger.error("[UPLOAD] There was no 'file' part inside the request", exc);
 				throw new RecordsUploaderInternalException("There was no 'file' part inside the request");
 			} catch (ServletException exc) {
-				logger.error("[UPLOAD] Error while uploading a file",exc);
+				logger.error("[UPLOAD] Error while uploading a file", exc);
 				throw new RecordsUploaderInternalException(exc.getMessage());
 			}
 

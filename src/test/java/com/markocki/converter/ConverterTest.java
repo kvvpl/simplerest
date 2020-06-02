@@ -1,6 +1,7 @@
 package com.markocki.converter;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.fail;
 
 import java.io.BufferedReader;
@@ -16,7 +17,7 @@ import com.markocki.model.Record;
 public class ConverterTest {
 
 	@Test
-	void testCorrectFile() {
+	void testParsingCorrectFile() {
 
 		try (InputStream fileInputStream = ConverterTest.class.getResourceAsStream("correct.txt");
 				BufferedReader reader = new BufferedReader(new InputStreamReader(fileInputStream));) {
@@ -45,7 +46,7 @@ public class ConverterTest {
 	}
 
 	@Test
-	void testMinimalButCorrectFile() {
+	void testParsingMinimalButCorrectFile() {
 
 		try (InputStream fileInputStream = ConverterTest.class.getResourceAsStream("minimalButCorrect.txt");
 				BufferedReader reader = new BufferedReader(new InputStreamReader(fileInputStream));) {
@@ -160,6 +161,23 @@ public class ConverterTest {
 
 		} catch (RecordsUploaderFileParseException exc) {
 			assertEquals("Line number 3 does not contains enough fields. Expected 4, received 3", exc.getMessage());
+		} catch(IOException exc) {
+			fail(exc);
+		}
+	}
+	
+	@Test
+	void testFileWithDuplicates() {
+		try (InputStream fileInputStream = ConverterTest.class.getResourceAsStream("withDuplicates.txt");
+				BufferedReader reader = new BufferedReader(new InputStreamReader(fileInputStream));) {
+
+			List<Record>result = RecordsUploader.tryRetrieveRecords(reader);
+			assertEquals(4, result.size());
+			
+			assertEquals(result.get(0).getPrimaryKey(), result.get(2).getPrimaryKey(),"First and third record should be the same");
+			assertEquals(result.get(0).getPrimaryKey(), result.get(2).getPrimaryKey(),"Second and fourth record should be the same");
+		} catch (RecordsUploaderFileParseException exc) {
+			fail(exc);
 		} catch(IOException exc) {
 			fail(exc);
 		}

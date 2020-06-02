@@ -4,8 +4,15 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
+import java.io.BufferedReader;
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.LogManager;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.Part;
 
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -15,6 +22,7 @@ import org.slf4j.LoggerFactory;
 
 import com.markocki.model.Record;
 import com.markocki.storage.NoRecordFoundException;
+import com.markocki.storage.RecordStoreException;
 import com.markocki.storage.Storage;
 
 import spark.Request;
@@ -22,7 +30,7 @@ import spark.Response;
 
 public class FrontControllerTest {
 	@Test
-	public void testEcho() throws Exception {
+	public void testEchoRequest() throws Exception {
 		final String MESSAGE = "It works";
 		
 		Request request = Mockito.mock(Request.class);
@@ -87,7 +95,7 @@ public class FrontControllerTest {
 	}
 
 	@Test
-	public void testUnSuccessfulDelete() throws Exception {
+	public void testUnSuccessfulDeleteWhenNoRecordFound() throws Exception {
 		final String PRIMARY_KEY = "keNotToBeFoundy";
 
 		Request request = Mockito.mock(Request.class);
@@ -168,7 +176,7 @@ public class FrontControllerTest {
 	}
 
 	@Test
-	public void testUnSuccessfulGet() throws Exception {
+	public void testUnSuccessfulGetWhenNoRecordFound() throws Exception {
 		final String PRIMARY_KEY = "keNotToBeFoundy";
 
 		Request request = Mockito.mock(Request.class);
@@ -208,6 +216,108 @@ public class FrontControllerTest {
 		Mockito.verifyNoMoreInteractions(storage);
 	}
 
+	@Test
+	public void testSuccessfulUpload() throws Exception {
+		final String FILE_PART_NAME = "file";
+
+		InputStream is = Mockito.mock(InputStream.class);
+		
+		Part part = Mockito.mock(Part.class);
+		Mockito.when(part.getInputStream()).thenReturn(is);
+		
+		Request request = Mockito.mock(Request.class);
+		
+		HttpServletRequest raw = Mockito.mock(HttpServletRequest.class);
+		Mockito.when(request.raw()).thenReturn(raw);
+		Mockito.when(request.raw().getPart(FILE_PART_NAME)).thenReturn(part);
+
+		Record record = Mockito.mock(Record.class);
+		List<Record> toBeReturned = new ArrayList<Record>();
+		toBeReturned.add(record);
+		
+		Storage storage = Mockito.mock(Storage.class);
+		Mockito.doNothing().when(storage).save(Mockito.any(Record.class));
+		
+		FrontController fc = Mockito.mock(FrontController.class);
+		Mockito.when(fc.getAllRecords(Mockito.any(BufferedReader.class))).thenReturn(toBeReturned);
+		Mockito.when(fc.getStorage()).thenReturn(storage);
+		Mockito.when(fc.upload()).thenCallRealMethod();
+
+		Response response = Mockito.mock(Response.class);
+		
+		fc.upload().handle(request, response);		
+		
+		Mockito.verify(part, Mockito.times(1)).getInputStream();
+		Mockito.verifyNoMoreInteractions(part);
+		Mockito.verify(request, Mockito.times(3)).raw();
+		Mockito.verifyNoMoreInteractions(request);
+
+		Mockito.verify(storage,Mockito.times(1)).save(Mockito.any(Record.class));
+		Mockito.verifyNoMoreInteractions(storage);
+		
+		Mockito.verify(fc, Mockito.times(1)).getStorage();
+		Mockito.verify(fc, Mockito.times(1)).upload();
+		Mockito.verify(fc, Mockito.times(1)).getAllRecords(Mockito.any(BufferedReader.class));
+		Mockito.verifyNoMoreInteractions(fc);
+		
+		Mockito.verify(response, Mockito.times(1)).status(200);
+		Mockito.verify(response, Mockito.times(1)).body(Mockito.contains("Uploaded successfully"));
+		Mockito.verify(response, Mockito.times(1)).body();
+		Mockito.verifyNoMoreInteractions(response);
+	}	
+
+	@Test
+	public void testDuplicateUpload() throws Exception {
+		final String FILE_PART_NAME = "file";
+
+		InputStream is = Mockito.mock(InputStream.class);
+		
+		Part part = Mockito.mock(Part.class);
+		Mockito.when(part.getInputStream()).thenReturn(is);
+		
+		Request request = Mockito.mock(Request.class);
+		
+		HttpServletRequest raw = Mockito.mock(HttpServletRequest.class);
+		Mockito.when(request.raw()).thenReturn(raw);
+		Mockito.when(request.raw().getPart(FILE_PART_NAME)).thenReturn(part);
+
+		Record record = Mockito.mock(Record.class);
+		List<Record> toBeReturned = new ArrayList<Record>();
+		toBeReturned.add(record);
+		
+		Storage storage = Mockito.mock(Storage.class);
+		Mockito.doThrow(new RecordStoreException("Cannot store duplicate")).when(storage).save(Mockito.any(Record.class));
+		
+		FrontController fc = Mockito.mock(FrontController.class);
+		Mockito.when(fc.getAllRecords(Mockito.any(BufferedReader.class))).thenReturn(toBeReturned);
+		Mockito.when(fc.getStorage()).thenReturn(storage);
+		Mockito.when(fc.upload()).thenCallRealMethod();
+
+		Response response = Mockito.mock(Response.class);
+		
+		fc.upload().handle(request, response);		
+		
+		Mockito.verify(part, Mockito.times(1)).getInputStream();
+		Mockito.verifyNoMoreInteractions(part);
+		Mockito.verify(request, Mockito.times(3)).raw();
+		Mockito.verifyNoMoreInteractions(request);
+
+		Mockito.verify(storage,Mockito.times(1)).save(Mockito.any(Record.class));
+		Mockito.verifyNoMoreInteractions(storage);
+		
+		Mockito.verify(fc, Mockito.times(1)).getStorage();
+		Mockito.verify(fc, Mockito.times(1)).upload();
+		Mockito.verify(fc, Mockito.times(1)).getAllRecords(Mockito.any(BufferedReader.class));
+		Mockito.verifyNoMoreInteractions(fc);
+		
+		Mockito.verify(response, Mockito.times(1)).status(200);
+		Mockito.verify(response, Mockito.times(1)).body(Mockito.contains("Uploaded successfully"));
+		Mockito.verify(response, Mockito.times(1)).body();
+		Mockito.verifyNoMoreInteractions(response);
+	}	
+	
+	
+	
 	@BeforeAll
 	public static void setUp() {
 		// as there is no way to change log level in runtime for sl4j

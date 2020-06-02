@@ -7,6 +7,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.util.Random;
 
 import org.junit.jupiter.api.Test;
 
@@ -39,7 +40,7 @@ public class StorageTest {
 	}
 
 	@Test
-	void getFactory() {
+	void testIfStorageFactoryIsAvailable() {
 		assertNotNull(StorageFactory.class, "There is no StorageFactory class found");
 	}
 
@@ -57,7 +58,7 @@ public class StorageTest {
 	}
 
 	@Test
-	void testSaveAndRetrieve() throws IOException, RecordCreateException {
+	void testRecordSaveAndRetrieve() throws IOException, RecordCreateException {
 		String tmpdir = System.getProperty("java.io.tmpdir");
 
 		File dir = createNewStorageDictionary(tmpdir);
@@ -84,6 +85,65 @@ public class StorageTest {
 		removeStorageDictionary(dir);
 	}
 
+	
+	@Test
+	void testStoreDuplicateRecords() throws IOException, RecordCreateException {
+		String tmpdir = System.getProperty("java.io.tmpdir");
+
+		File dir = createNewStorageDictionary(tmpdir);
+
+		Storage storage = StorageFactory.loadStorage(dir.getPath());
+
+		Record recordA = createRecord("key", "nameA", "description", System.currentTimeMillis());
+		Record recordB = createRecord("key", "nameB", "description", System.currentTimeMillis());
+
+		try {
+			storage.save(recordA);
+			storage.save(recordB);
+			fail("It must be impossible to store duplicated record");
+
+		} catch (RecordStoreException exc) {
+			assertEquals("Record for PRIMARY_KEY=key already exists", exc.getMessage());
+		}
+		removeStorageDictionary(dir);
+	}	
+	
+	@Test
+	void testIfAttemptToStoreDuplicateRecordsPreserveTheOriginalOne() throws IOException, RecordCreateException {
+		String tmpdir = System.getProperty("java.io.tmpdir");
+
+		File dir = createNewStorageDictionary(tmpdir);
+
+		Storage storage = StorageFactory.loadStorage(dir.getPath());
+
+		Record recordA = createRecord("key", "nameA", "descriptionA", System.currentTimeMillis()+new Random().nextLong());
+		Record recordB = createRecord("key", "nameB", "description", System.currentTimeMillis());
+
+		try {
+			storage.save(recordA);
+			storage.save(recordB);
+			fail("It must be impossible to store duplicated record");
+
+		} catch (RecordStoreException exc) {
+			assertEquals("Record for PRIMARY_KEY=key already exists", exc.getMessage());
+		}
+		
+		try {
+			Record retrievedRecord = storage.findByPrimaryKey(recordA.getPrimaryKey());
+
+			assertEquals(recordA.getName(), retrievedRecord.getName(), "Name of record is different");
+			assertEquals(recordA.getDescription(), retrievedRecord.getDescription(),
+					"Description of record is different");
+			assertEquals(recordA.getUpdatedTimestamp(), retrievedRecord.getUpdatedTimestamp(),
+					"Timestamp of record is different");
+
+		} catch (NoRecordFoundException exc) {
+			fail(exc);
+		}
+		
+		removeStorageDictionary(dir);
+	}		
+	
 	@Test
 	void testCloseAndReopenStorage() throws IOException, RecordCreateException {
 		String tmpdir = System.getProperty("java.io.tmpdir");

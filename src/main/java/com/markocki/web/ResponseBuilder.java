@@ -26,8 +26,4 @@ public class ResponseBuilder {
 		// correctly processed - status 200
 		createtResponse(response, 200, message);
 	}
-	public static void createtResponseError(Response response, String message) {
-		// something went wrong - status 400
-		createtResponse(response, 400, message);
-	}
 }
