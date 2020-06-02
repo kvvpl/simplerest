@@ -61,3 +61,5 @@ is returned after upload is finished.
 9. A simple object-storage is used. The storage file is loaded from the app.storage.dir at the application
 startup and persisted during shutdown.
 10. Unrecognized HTTP verbs or URI result in an error with 'nothing here' message.
+11. Duplicates handling: if a duplicate record (i.e. with the same primary key) is found either inside the uploaded 
+file or inside the storage, the already present record is preserved and the newly obtained is ignored.
