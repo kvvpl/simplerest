@@ -31,8 +31,11 @@ and retrieved from (default same as java.io.tmpdir)
 ## How to use the application
 
 GET /echo - checks if the application is up and running
+
 GET /record/{primary_key} - retrieves the record for given primary key
+
 DELETE /record/{primary_key} - deletes the record for given primary key
+
 POST /upload - uploads a given comma-separated, 4-field-wide file. For successful upload 
 the encoding (Content-Type) must be set to 'multipart/form-data' and the file must be uploaded as the part of name 'file'
 One can have a look at /upload.html for the sample upload page.
